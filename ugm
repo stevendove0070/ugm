@@ -1,0 +1,364 @@
+#!/bin/bash
+<<property
+Autor:stephen dove
+Compania:IsnHosting
+Contact:stevendove@isnhosting.ml
+App:User&Group Management
+Ver:1.0
+Revision:21032018
+property
+
+#vars
+menures=""
+user=""
+username=""
+uid=""
+gid=""
+shelltype="/bin/ksh"
+basehome="/home/"
+ugroup=""
+sgroup=$ugroup
+dept=""
+usrbase="sdove"
+grbase="root"
+#vars
+
+#functions
+
+function usrpassexp {
+##Epiracion de Passwd
+
+echo -e "\n Expiracion de passwd para $user \n"
+sudo chage -M 90 -W 3 $user
+sudo chage -l $user
+echo -e "\n Asignar passwd para $user \n"
+sudo passwd $user
+}
+
+function aduser {
+##Agregar Usuario
+
+read -p "\nDepartamento de Usuario: " dept
+read -p "Usuario: " user
+read -p "Nombre del Usuario: " username
+#read -p "Path de Home: " home
+#read -p "Gecos: " gecos
+read -p "UID: " uid
+read -p "Nombre de Grupo: " ugroup
+read -p "Nombre de Grupo Secundario (si no hay agregar grupo primario): " sgroup
+echo -e "\n"
+sudo useradd -m -d $basehome$ugroup -u $uid -g $ugroup -G $sgroup -c "$username-$dept" -s $shelltype $user
+## >> ugmlogs.txt
+echo -e "\nSe ha creado el usuario con los siguientes atributos\n" $user $basehome$ugroup $uid $ugroup $username - $dept $shelltype
+sudo chown $user:$ugroup $basehome$ugroup
+sudo chmod 755 $basehome$ugroup
+usrpassexp
+/bin/sleep 2
+}
+
+function adgroup {
+##Agregar Grupo
+
+read -p "\nNombre de Grupo: " group
+read -p "GID: " gid
+echo -e "\n "
+sudo groupadd -g $gid $group
+## >> ugmlogs.txt
+echo -e "\nSe ha creado el grupo con los siguientes atributos\n" $gid $group
+tail -n1 /etc/group
+/bin/sleep 2
+}
+
+function list {
+##Listar Passwd
+echo -e "\nUsuarios Existentes\n"
+cat /etc/passwd | grep "bash"
+cat /etc/passwd | grep "ksh"
+echo -e "\nGrupos Existentes\n"
+tail /etc/group
+/bin/sleep 5
+}
+
+function adsudo {
+##Agregar a Sudoers
+
+sudo visudo
+/bin/sleep 2
+}
+
+function userbase {
+##Agregar UserBase
+
+sudo useradd -m -d $basehomesdove -u 1500 -g gradmin -G root -c Stephen Dove - Administrador de Servidores Intel -s $shelltype $usrbase
+## >> ugmlogs.txt
+echo "Se crearon los usuarios $usrbase"
+/bin/sleep 2
+}
+
+function groupbase {
+##Agregar GroupBase
+
+sudo groupadd -g 1500 $grbase
+## >> ugmlogs.txt
+echo "Se crearon los grupos $grbase"
+/bin/sleep 2
+
+}
+
+function delusr {
+##Borrar Usuario
+
+list
+echo -e "\n"
+read -p "Usuario: " user
+read -p "Grupo: " group
+sudo userdel $user
+## >> ugmlogs.txt
+echo "Usuario Borrado\n"
+sudo rm $basehome$group/.*
+sudo rmdir $basehome$group
+echo "Home Borrado"
+/bin/sleep 2
+}
+
+function delgrp {
+##Borrar Grupo
+tail -n20 /etc/group
+echo -e "\n"
+read -p "Grupo: " group
+sudo groupdel $group
+## >> ugmlogs.txt
+echo "Grupo Borrado"
+/bin/sleep 2
+}
+
+function modusr {
+##Modificar Usuario
+modusrmen
+
+/bin/sleep 2
+}
+
+function modgrp {
+##Modificar Grupo
+modgrpmen
+
+/bin/sleep 2
+}
+
+#funtions
+
+##Menus
+function add {
+echo -e "\t@@@@@@@@@@@@@@@@@@@"
+echo -e "\t@@@@@@@Altas@@@@@@@"
+echo -e "\t#Usuario:\t1 #\n\t#\t\t  #"
+echo -e "\t#Grupo:\t\t2 #\n\t#\t\t  #"
+echo -e "\t#Usuario App\t10#\n\t#\t\t  #"
+echo -e "\t#Grupo App:\t11#\n\t#\t\t  #"
+echo -e "\t#Sudoers:\t3 #\t\n\t#\t\t  #"
+echo -e "\t#UserBase:\t4 #\t\n\t#\t\t  #"
+echo -e "\t#GroupBase:\t5 #\t\n\t#\t\t  #"
+echo -e "\t#Salir:\t\tX #\t\n\t#\t\t  #"
+echo -e "\t@@@@@@@@@@@@@@@@@@@"
+read -p "        ###############[ " menures
+}
+
+function remove {
+echo -e "\t@@@@@@@@@@@@@@@@@@@"
+echo -e "\t@@@@@@@Bajas@@@@@@@"
+echo -e "\t#Usuario:\t6 #\t\n\t#\t\t  #"
+echo -e "\t#Grupo:\t\t7 #\t\n\t#\t\t  #"
+echo -e "\t#Usuario App:\t12#\t\n\t#\t\t  #"
+echo -e "\t#Grupo App:\t13#\t\n\t#\t\t  #"
+echo -e "\t#Salir:\t\tX #\t\n\t#\t\t  #"
+echo -e "\t@@@@@@@@@@@@@@@@@@@"
+read -p "        ###############[ " menures
+}
+
+function modify {
+echo -e "\t@@@@@@@@@@@@@@@@@@@"
+echo -e "\t@@@@Modificacion@@@"
+echo -e "\t#Usuario:\t8 #\t\n\t#\t\t  #"
+echo -e "\t#Grupo:\t\t9 #\t\n\t#\t\t  #"
+echo -e "\t#Usuario App:\t14#\t\n\t#\t\t  #"
+echo -e "\t#Grupo App:\t15#\t\n\t#\t\t  #"
+echo -e "\t#Salir:\t\tX #\t\n\t#\t\t  #"
+echo -e "\t@@@@@@@@@@@@@@@@@@@"
+read -p "        ###############[ " menures
+}
+
+function modusrmen {
+echo -e "\t@@@@@@@@@@@@@@@@@@@"
+echo -e "\t@@Modifica Usuario@"
+echo -e "\t#Usuario:\t8 #\t\n\t#\t\t  #"
+echo -e "\t#Grupo:\t\t9 #\t\n\t#\t\t  #"
+echo -e "\t#Usuario App:\t14#\t\n\t#\t\t  #"
+echo -e "\t#Grupo App:\t15#\t\n\t#\t\t  #"
+echo -e "\t#Salir:\t\tX #\t\n\t#\t\t  #"
+echo -e "\t@@@@@@@@@@@@@@@@@@@"
+read -p "        ###############[ " menures
+}
+
+function modgrpmen {
+echo -e "\t@@@@@@@@@@@@@@@@@@@"
+echo -e "\t@@@Modifica Grupo@@"
+echo -e "\t#Usuario:\t8 #\t\n\t#\t\t  #"
+echo -e "\t#Grupo:\t\t9 #\t\n\t#\t\t  #"
+echo -e "\t#Usuario App:\t14#\t\n\t#\t\t  #"
+echo -e "\t#Grupo App:\t15#\t\n\t#\t\t  #"
+echo -e "\t#Salir:\t\tX #\t\n\t#\t\t  #"
+echo -e "\t@@@@@@@@@@@@@@@@@@@"
+read -p "        ###############[ " menures
+}
+
+while [ "$menures" != Q ]
+do
+clear
+echo -e "\n\t\tUser & Group Management\n\n"
+echo -e "\t@@@@@@@@@@@@@@@@@@@"
+echo -e "\t#Altas:\t\tA #\t\n\t#\t\t  #"
+echo -e "\t#Bajas:\t\tB #\t\n\t#\t\t  #"
+echo -e "\t#Modificacion:\tC #\t\n\t#\t\t  #"
+echo -e "\t#Listar:\tD #\t\n\t#\t\t  #"
+echo -e "\t#Salir:\t\tQ #\t\n\t#\t\t  #"
+echo -e "\t@@@@@@@@@@@@@@@@@@@"
+read -p "        ###############[ " menures
+clear
+##Menus
+
+if [ "$menures" = A ]
+then
+clear
+add
+fi
+
+if [ "$menures" = B ]
+then
+clear
+remove
+fi
+
+if [ "$menures" = C ]
+then
+clear
+modify
+fi
+
+if [ "$menures" = D ]
+then
+clear
+list
+fi
+
+if [ "$menures" = 1  ]
+then
+clear
+#Alta Usuario
+aduser
+
+fi
+
+if [ "$menures" = 2  ]
+then
+clear
+#Alta Grupo
+adgroup
+fi
+
+if [ "$menures" = 3  ]
+then
+clear
+#Agregar a Sudoers
+adsudo
+fi
+
+if [ "$menures" = 4  ]
+then
+clear
+#Alta Base Usuario
+userbase
+fi
+
+if [ "$menures" = 5  ]
+then
+clear
+#Alta Base Grupo
+groupbase
+fi
+
+if [ "$menures" = 6  ]
+then
+clear
+#Baja Usuario
+delusr
+fi
+
+if [ "$menures" = 7  ]
+then
+clear
+#Baja Grupo
+delgrp
+fi
+
+if [ "$menures" = 8  ]
+then
+clear
+#Modificacion Usuario
+modusr
+fi
+
+if [ "$menures" = 9  ]
+then
+clear
+#Modificacion Grupo
+
+fi
+
+if [ "$menures" = 10  ]
+then
+clear
+#Alta Usuario Aplicativo
+
+fi
+
+if [ "$menures" = 11  ]
+then
+clear
+#Alta Grupo Aplicativo
+
+fi
+
+if [ "$menures" = 12  ]
+then
+clear
+#Baja Usuario Aplicativo
+
+fi
+
+if [ "$menures" = 13  ]
+then
+clear
+#Baja Grupo Aplicativo
+
+fi
+
+if [ "$menures" = 14  ]
+then
+clear
+#Modificacion Usuario Aplicativo
+
+fi
+
+if [ "$menures" = 15  ]
+then
+clear
+#modificacion Grupo Aplicativo
+
+fi
+
+done 
+clear
+echo -e " \n\n\t\t\tExiting \n\t\tUser & Group Management\n "
+/bin/sleep 2
+
